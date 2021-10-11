@@ -89,6 +89,8 @@ class Model {
     this.autocompleteState = "";
     this.autocompleteProgress = {};
     this.exportProgress = {};
+    this.relationsHidden = false;
+    this.relationsColumnsIndex = [];
 
     this.spinFor(sfConn.soap(sfConn.wsdl(apiVersion, "Partner"), "getUserInfo", {}).then(res => {
       this.userInfo = res.userFullName + " / " + res.userName + " / " + res.organizationName;
@@ -697,6 +699,7 @@ class Model {
     exportedData.sfHost = vm.sfHost;
     let query = vm.queryInput.value;
     let queryMethod = exportedData.isTooling ? "tooling/query" : vm.queryAll ? "queryAll" : "query";
+    this.relationsHidden = false;
     function batchHandler(batch) {
       return batch.catch(err => {
         if (err.name == "AbortError") {
@@ -773,6 +776,19 @@ class Model {
   stopExport() {
     this.exportProgress.abort();
   }
+  hideRelations() {
+    let display = "none";
+    if (!this.relationsHidden) {
+      display = "";
+    }
+    Array.prototype.forEach.call(document.getElementsByClassName('hide-relation'), relation => {
+      relation.style.display = display;
+    });
+    console.log(this.exportedData.table);
+    //TODO
+    //this.exportedData.table is an array of array, for each sub array, if the column index is in relationsColumnsIndex, remove the index from sub array
+    this.exportedData.table = this.exportedData.table.filter(item => console.log(item));//this.relationsColumnsIndex.includes(item))
+  }
 }
 
 function RecordTable(vm) {
@@ -817,6 +833,7 @@ function RecordTable(vm) {
     }
   }
   let isVisible = (row, filter) => !filter || row.some(cell => cellToString(cell).toLowerCase().includes(filter.toLowerCase()));
+
   let rt = {
     records: [],
     table: [],
@@ -872,6 +889,7 @@ class App extends React.Component {
     this.onCopyAsJson = this.onCopyAsJson.bind(this);
     this.onResultsFilterInput = this.onResultsFilterInput.bind(this);
     this.onStopExport = this.onStopExport.bind(this);
+    this.onHideRelationsChange = this.onHideRelationsChange.bind(this);
   }
   onQueryAllChange(e) {
     let { model } = this.props;
@@ -977,6 +995,12 @@ class App extends React.Component {
   onStopExport() {
     let { model } = this.props;
     model.stopExport();
+    model.didUpdate();
+  }
+  onHideRelationsChange(e) {
+    let { model } = this.props;
+    model.relationsHidden = e.target.checked;
+    model.hideRelations();
     model.didUpdate();
   }
   componentDidMount() {
@@ -1142,6 +1166,13 @@ class App extends React.Component {
             h("button", { disabled: !model.canCopy(), onClick: this.onCopyAsJson, title: "Copy raw API output to clipboard" }, "Copy (JSON)"),
           ),
           h("input", { placeholder: "Filter Results", type: "search", value: model.resultsFilter, onInput: this.onResultsFilterInput }),
+          h("div", { className: "hide-records-links" },
+            h("label", {},
+              h("input", { type: "checkbox", checked: model.relationsHidden, onChange: this.onHideRelationsChange, disabled: model.isWorking }),
+              " ",
+              h("span", {}, "Hide records links")
+            ),
+          ),
           h("span", { className: "result-status flex-right" },
             h("span", {}, model.exportStatus),
             h("button", { className: "cancel-btn", disabled: !model.isWorking, onClick: this.onStopExport }, "Stop"),

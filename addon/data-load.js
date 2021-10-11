@@ -1,11 +1,11 @@
-import {sfConn, apiVersion} from "./inspector.js";
+import { sfConn, apiVersion } from "./inspector.js";
 
 // Inspired by C# System.Linq.Enumerable
 export function Enumerable(iterable) {
   this[Symbol.iterator] = iterable[Symbol.iterator].bind(iterable);
 }
 Enumerable.prototype = {
-  __proto__: function*(){}.prototype,
+  __proto__: function* () { }.prototype,
   *map(f) {
     for (let e of this) {
       yield f(e);
@@ -46,8 +46,8 @@ Enumerable.prototype.concat.prototype = Enumerable.prototype;
 export function DescribeInfo(spinFor, didUpdate) {
   function initialState() {
     return {
-      data: {global: {globalStatus: "pending", globalDescribe: null}, sobjects: null},
-      tool: {global: {globalStatus: "pending", globalDescribe: null}, sobjects: null}
+      data: { global: { globalStatus: "pending", globalDescribe: null }, sobjects: null },
+      tool: { global: { globalStatus: "pending", globalDescribe: null }, sobjects: null }
     };
   }
   let sobjectAllDescribes = initialState();
@@ -61,7 +61,7 @@ export function DescribeInfo(spinFor, didUpdate) {
         apiDescribes.global.globalDescribe = res;
         apiDescribes.sobjects = new Map();
         for (let sobjectDescribe of res.sobjects) {
-          apiDescribes.sobjects.set(sobjectDescribe.name.toLowerCase(), {global: sobjectDescribe, sobject: {sobjectStatus: "pending", sobjectDescribe: null}});
+          apiDescribes.sobjects.set(sobjectDescribe.name.toLowerCase(), { global: sobjectDescribe, sobject: { sobjectStatus: "pending", sobjectDescribe: null } });
         }
         didUpdate();
       }, () => {
@@ -96,11 +96,11 @@ export function DescribeInfo(spinFor, didUpdate) {
     describeSobject(useToolingApi, sobjectName) {
       let apiDescribes = getGlobal(useToolingApi);
       if (!apiDescribes.sobjects) {
-        return {sobjectStatus: apiDescribes.global.globalStatus, sobjectDescribe: null};
+        return { sobjectStatus: apiDescribes.global.globalStatus, sobjectDescribe: null };
       }
       let sobjectInfo = apiDescribes.sobjects.get(sobjectName.toLowerCase());
       if (!sobjectInfo) {
-        return {sobjectStatus: "notfound", sobjectDescribe: null};
+        return { sobjectStatus: "notfound", sobjectDescribe: null };
       }
       if (sobjectInfo.sobject.sobjectStatus == "pending") {
         sobjectInfo.sobject.sobjectStatus = "loading";
@@ -162,7 +162,7 @@ function renderCell(rt, cell, td) {
       let pop = document.createElement("div");
       pop.className = "pop-menu";
       td.appendChild(pop);
-      let {objectTypes, recordId} = recordInfo();
+      let { objectTypes, recordId } = recordInfo();
       for (let objectType of objectTypes) {
         let aShow = document.createElement("a");
         let args = new URLSearchParams();
@@ -234,7 +234,7 @@ function renderCell(rt, cell, td) {
           recordId = cell.attributes.url.replace(/.*\//, "");
         }
         let objectTypes = [cell.attributes.type];
-        return {objectTypes, recordId};
+        return { objectTypes, recordId };
       },
       cell.attributes.type
     );
@@ -242,7 +242,7 @@ function renderCell(rt, cell, td) {
     popLink(
       () => {
         let recordId = cell;
-        let {globalDescribe} = rt.describeInfo.describeGlobal(rt.isTooling);
+        let { globalDescribe } = rt.describeInfo.describeGlobal(rt.isTooling);
         let objectTypes;
         if (globalDescribe) {
           let keyPrefix = recordId.substring(0, 3);
@@ -250,7 +250,7 @@ function renderCell(rt, cell, td) {
         } else {
           objectTypes = [];
         }
-        return {objectTypes, recordId};
+        return { objectTypes, recordId };
       },
       cell
     );
@@ -358,7 +358,7 @@ export function initScrollTable(scroller) {
       firstColLeft = 0;
       lastColIdx = 0;
       lastColLeft = 0;
-      renderData({force: true});
+      renderData({ force: true });
     } else {
       // Data or visibility was changed
       let newRowCount = data.rowVisibilities.length;
@@ -391,7 +391,7 @@ export function initScrollTable(scroller) {
         }
         colVisible[c] = newVisible;
       }
-      renderData({force: true});
+      renderData({ force: true });
     }
   }
 
@@ -407,10 +407,10 @@ export function initScrollTable(scroller) {
     ) {
       return;
     }
-    renderData({force: false});
+    renderData({ force: false });
   }
 
-  function renderData({force}) {
+  function renderData({ force }) {
     scrollTop = scroller.scrollTop;
     scrollLeft = scroller.scrollLeft;
     offsetHeight = scroller.offsetHeight;
@@ -426,7 +426,6 @@ export function initScrollTable(scroller) {
     if (!force && firstRowTop <= scrollTop && (lastRowTop >= scrollTop + offsetHeight || lastRowIdx == rowCount) && firstColLeft <= scrollLeft && (lastColLeft >= scrollLeft + offsetWidth || lastColIdx == colCount)) {
       return;
     }
-    console.log("render");
 
     while (firstRowTop < scrollTop - bufferHeight && firstRowIdx < rowCount - 1) {
       firstRowTop += rowVisible[firstRowIdx] * rowHeights[firstRowIdx];
@@ -464,6 +463,9 @@ export function initScrollTable(scroller) {
 
     let table = document.createElement("table");
     let cellsVisible = false;
+
+    //build array with relations fields that can be hidden
+    const relationColmuns = data.table[0].filter(dot => dot.includes(".")).map(filteredObj => filteredObj.split(".")[0]);
     for (let r = firstRowIdx; r < lastRowIdx; r++) {
       if (rowVisible[r] == 0) {
         continue;
@@ -479,6 +481,10 @@ export function initScrollTable(scroller) {
         td.className = "scrolltable-cell";
         if (r < headerRows || c < headerCols) {
           td.className += " header";
+        }
+        if (cell === "_" || this.relationsColumnsIndex.includes(c) || relationColmuns.includes(cell)) {
+          td.className += " hide-relation";
+          this.relationsColumnsIndex.push(c);
         }
         td.style.minWidth = colWidths[c] + "px";
         td.style.height = rowHeights[r] + "px"; // min-height does not work on table cells, but height acts as min-height

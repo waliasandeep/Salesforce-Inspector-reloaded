@@ -521,3 +521,6 @@ button.toggle .button-icon {
 .fieldName.complexvalue .autocomplete-icon {
   -webkit-mask-image: url('chrome-extension://__MSG_@@extension_id__/images/advanced_function.svg');
 }
+.hide-records-links{
+  margin-left: 10px;
+}
