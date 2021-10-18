@@ -465,7 +465,8 @@ export function initScrollTable(scroller) {
     let cellsVisible = false;
 
     //build array with relations fields that can be hidden
-    const relationColmuns = data.table[0].filter(dot => dot.includes(".")).map(filteredObj => filteredObj.split(".")[0]);
+    let relationColmuns = data.table[0].filter(dot => dot.includes(".")).map(filteredObj => filteredObj.split(".")[0]);
+    let relationsColumnsIndex = [];
     for (let r = firstRowIdx; r < lastRowIdx; r++) {
       if (rowVisible[r] == 0) {
         continue;
@@ -482,9 +483,9 @@ export function initScrollTable(scroller) {
         if (r < headerRows || c < headerCols) {
           td.className += " header";
         }
-        if (cell === "_" || this.relationsColumnsIndex.includes(c) || relationColmuns.includes(cell)) {
+        if (cell === "_" || relationsColumnsIndex.includes(c) || relationColmuns.includes(cell)) {
           td.className += " hide-relation";
-          this.relationsColumnsIndex.push(c);
+          relationsColumnsIndex.push(c);
         }
         td.style.minWidth = colWidths[c] + "px";
         td.style.height = rowHeights[r] + "px"; // min-height does not work on table cells, but height acts as min-height

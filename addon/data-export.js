@@ -95,7 +95,6 @@ class Model {
     this.autocompleteProgress = {};
     this.exportProgress = {};
     this.relationsHidden = false;
-    this.relationsColumnsIndex = [];
     this.queryName = "";
 
     this.spinFor(sfConn.soap(sfConn.wsdl(apiVersion, "Partner"), "getUserInfo", {}).then(res => {
@@ -801,13 +800,17 @@ class Model {
     Array.prototype.forEach.call(document.getElementsByClassName('hide-relation'), relation => {
       relation.style.display = display;
     });
+    //TODO goal is to remove column index which are considered to be hidden (relationColmuns)
+
     console.log(this.exportedData.table);
-    //TODO
-    //this.exportedData.table is an array of array, for each sub array, if the column index is in relationsColumnsIndex, remove the index from sub array
-    this.exportedData.table = this.exportedData.table.filter(item => console.log(item));//this.relationsColumnsIndex.includes(item))
+    console.log(this.exportedData.table[0]);
+    let relationColmuns = ["_"];
+    relationColmuns.push(this.exportedData.table[0].filter(dot => dot.includes(".")).map(filteredObj => filteredObj.split(".")[0]));
+    console.log(relationColmuns);
+    console.log(this.exportedData.table.splice(1, 1));
+
   }
 }
-
 function RecordTable(vm) {
   /*
   We don't want to build our own SOQL parser, so we discover the columns based on the data returned.
