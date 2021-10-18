@@ -22,6 +22,7 @@ class QueryHistory {
     }
     // A previous version stored just strings. Skip entries from that to avoid errors.
     history = history.filter(e => typeof e == "object");
+    this.sort(history);
     return history;
   }
 
@@ -36,7 +37,7 @@ class QueryHistory {
       history.pop();
     }
     localStorage[this.storageKey] = JSON.stringify(history);
-    this.list = history;
+    this.sort(history);
   }
 
   remove(entry) {
@@ -46,7 +47,7 @@ class QueryHistory {
       history.splice(historyIndex, 1);
     }
     localStorage[this.storageKey] = JSON.stringify(history);
-    this.list = history;
+    this.sort(history);
   }
 
   clear() {
@@ -54,6 +55,10 @@ class QueryHistory {
     this.list = [];
   }
 
+  sort(history) {
+    history.sort((a, b) => (a.query > b.query) ? 1 : ((b.query > a.query) ? -1 : 0));
+    this.list = history;
+  }
 }
 
 class Model {
@@ -91,6 +96,7 @@ class Model {
     this.exportProgress = {};
     this.relationsHidden = false;
     this.relationsColumnsIndex = [];
+    this.queryName = "";
 
     this.spinFor(sfConn.soap(sfConn.wsdl(apiVersion, "Partner"), "getUserInfo", {}).then(res => {
       this.userInfo = res.userFullName + " / " + res.userName + " / " + res.organizationName;
@@ -119,6 +125,9 @@ class Model {
     // Recalculate visibility
     this.exportedData.updateVisibility();
     this.updatedExportedData();
+  }
+  setQueryName(value) {
+    this.queryName = value;
   }
   setQueryInput(queryInput) {
     this.queryInput = queryInput;
@@ -156,7 +165,15 @@ class Model {
   }
   selectSavedEntry() {
     if (this.selectedSavedEntry != null) {
-      this.queryInput.value = this.selectedSavedEntry.query;
+      let queryStr = "";
+      if (this.selectedSavedEntry.query.includes(":")) {
+        let query = this.selectedSavedEntry.query.split(":");
+        this.queryName = query[0];
+        queryStr = query[1];
+      } else {
+        queryStr = this.selectedSavedEntry.query;
+      }
+      this.queryInput.value = queryStr;
       this.queryTooling = this.selectedSavedEntry.useToolingApi;
       this.queryAutocompleteHandler();
       this.selectedSavedEntry = null;
@@ -166,10 +183,10 @@ class Model {
     this.savedHistory.clear();
   }
   addToHistory() {
-    this.savedHistory.add({ query: this.queryInput.value, useToolingApi: this.queryTooling });
+    this.savedHistory.add({ query: this.queryName + ":" + this.queryInput.value, useToolingApi: this.queryTooling });
   }
   removeFromHistory() {
-    this.savedHistory.remove({ query: this.queryInput.value, useToolingApi: this.queryTooling });
+    this.savedHistory.remove({ query: this.queryName + ":" + this.queryInput.value, useToolingApi: this.queryTooling });
   }
   autocompleteReload() {
     this.describeInfo.reloadAll();
@@ -254,9 +271,9 @@ class Model {
 
     vm.autocompleteClick = ({ value, suffix }) => {
       vm.queryInput.focus();
-      //handle when selected field is the last one before "FROM" keyword
-      let indexFrom = vm.queryInput.value.toLowerCase().indexOf("from");
-      if (vm.queryInput.value.substring(selEnd + 1, indexFrom).trim().length == 0) {
+      //handle when selected field is the last one before "FROM" keyword, or if an existing comma is present after selection
+      let indexFrom = query.toLowerCase().indexOf("from");
+      if (query.substring(selEnd + 1, indexFrom).trim().length == 0 || query.substring(selEnd).trim().startsWith(",")) {
         suffix = "";
       }
       vm.queryInput.setRangeText(value + suffix, selStart, selEnd, "end");
@@ -888,6 +905,7 @@ class App extends React.Component {
     this.onCopyAsCsv = this.onCopyAsCsv.bind(this);
     this.onCopyAsJson = this.onCopyAsJson.bind(this);
     this.onResultsFilterInput = this.onResultsFilterInput.bind(this);
+    this.onSetQueryName = this.onSetQueryName.bind(this);
     this.onStopExport = this.onStopExport.bind(this);
     this.onHideRelationsChange = this.onHideRelationsChange.bind(this);
   }
@@ -992,6 +1010,11 @@ class App extends React.Component {
     model.setResultsFilter(e.target.value);
     model.didUpdate();
   }
+  onSetQueryName(e) {
+    let { model } = this.props;
+    model.setQueryName(e.target.value);
+    model.didUpdate();
+  }
   onStopExport() {
     let { model } = this.props;
     model.stopExport();
@@ -1068,8 +1091,6 @@ class App extends React.Component {
   }
   render() {
     let { model } = this.props;
-    // console.log(model.autocompleteResults.results);
-    // console.log(model.autocompleteResults.sobjectName);
     return h("div", {},
       h("div", { id: "user-info" },
         h("a", { href: model.sfLink, className: "sf-link" },
@@ -1113,6 +1134,7 @@ class App extends React.Component {
                 h("option", { value: JSON.stringify(null), disabled: true }, "Saved Queries"),
                 model.savedHistory.list.map(q => h("option", { key: JSON.stringify(q), value: JSON.stringify(q) }, q.query.substring(0, 300)))
               ),
+              h("input", { placeholder: "Query Label", type: "save", value: model.queryName, onInput: this.onSetQueryName }),
               h("button", { onClick: this.onAddToHistory, title: "Add query to saved history" }, "Save Query"),
               h("button", { className: model.expandSavedOptions ? "toggle contract" : "toggle expand", title: "Show More Options", onClick: this.onToggleSavedOptions }, h("div", { className: "button-toggle-icon" })),
             ),
