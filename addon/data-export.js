@@ -809,11 +809,17 @@ class Model {
     console.log(this.exportedData.table[0]);
     let relationColmuns = ["_"];
     relationColmuns.push(this.exportedData.table[0].filter(dot => dot.includes(".")).map(filteredObj => filteredObj.split(".")[0]));
+
     console.log(relationColmuns);
     console.log(this.exportedData.table.splice(1, 1));
 
+    this.exportedData.table = this.exportedData.table.map(function (val) {
+      return val.slice(1);
+    });
+
   }
 }
+
 function RecordTable(vm) {
   /*
   We don't want to build our own SOQL parser, so we discover the columns based on the data returned.
