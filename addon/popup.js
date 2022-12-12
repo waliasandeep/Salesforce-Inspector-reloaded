@@ -135,6 +135,7 @@ class App extends React.PureComponent {
             // Advanded features should be put below this line, and the layout adjusted so they are below the fold
             h("a", { ref: "metaRetrieveBtn", href: "metadata-retrieve.html?" + hostArg, target: linkTarget, className: "button" }, h("u", {}, "D"), "ownload Metadata"),
             h("a", { ref: "apiExploreBtn", href: "explore-api.html?" + hostArg, target: linkTarget, className: "button" }, "E", h("u", {}, "x"), "plore API"),
+            h("a", { ref: "generateToken", href: `https://${sfHost}/services/oauth2/authorize?response_type=token&client_id=` + localStorage.getItem(sfHost + "_clientId") + "&redirect_uri=chrome-extension://" + chrome.runtime.id + "/data-export.html?host=" + sfHost + "%26", target: linkTarget, className: "button" }, h("u", {}, "G"), "enerate Connected App Token"),
             // Workaround for in Lightning the link to Setup always opens a new tab, and the link back cannot open a new tab.
             inLightning && isInSetup && h("a", { ref: "homeBtn", href: `https://${sfHost}/lightning/page/home`, title: "You can choose if you want to open in a new tab or not", target: linkTarget, className: "button" }, "Salesforce ", h("u", {}, "H"), "ome"),
             inLightning && !isInSetup && h("a", { ref: "homeBtn", href: `https://${sfHost}/lightning/setup/SetupOneHome/home?setupApp=all`, title: "You can choose if you want to open in a new tab or not", target: linkTarget, className: "button" }, "Setup ", h("u", {}, "H"), "ome"),
@@ -380,7 +381,7 @@ class AllDataBoxUsers extends React.PureComponent {
     //TODO: Better search query. SOSL?
     const fullQuerySelect = "select Id, Name, Email, Username, UserRole.Name, Alias, LocaleSidKey, LanguageLocaleKey, IsActive, ProfileId, Profile.Name";
     const minimalQuerySelect = "select Id, Name, Email, Username, UserRole.Name, Alias, LocaleSidKey, LanguageLocaleKey, IsActive";
-    const queryFrom = "from User where isactive=true and (username like '%" + userQuery + "%' or name like '%" + userQuery + "%') order by LastLoginDate limit 100";
+    const queryFrom = "from User where (username like '%" + userQuery + "%' or name like '%" + userQuery + "%') order by IsActive DESC, LastLoginDate limit 100";
     const compositeQuery = {
       "compositeRequest": [
         {
@@ -726,6 +727,10 @@ class UserDetails extends React.PureComponent {
               h("tr", {},
                 h("th", {}, "Username:"),
                 h("td", { className: "oneliner" }, user.Username)
+              ),
+              h("tr", {},
+                h("th", {}, "Id:"),
+                h("td", { className: "oneliner" }, user.Id)
               ),
               h("tr", {},
                 h("th", {}, "E-mail:"),

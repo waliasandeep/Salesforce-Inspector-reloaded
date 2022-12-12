@@ -4,18 +4,11 @@ Salesforce inspector
 ===========================
 Chrome and Firefox extension to add a metadata layout on top of the standard Salesforce UI to improve the productivity and joy of Salesforce configuration, development, and integration work.
 
-[![Test Status](https://travis-ci.org/sorenkrabbe/Chrome-Salesforce-inspector.svg?branch=master)](https://travis-ci.org/sorenkrabbe/Chrome-Salesforce-inspector)
+[![Test Status](https://travis-ci.org/tprouvot/Chrome-Salesforce-inspector.svg?branch=master)](https://travis-ci.org/tprouvot/Chrome-Salesforce-inspector)
 
 New Features / Fix
 -----
-* Add label to saved query and sort list.
-* Remove extra comma when autocomplete query in data export, or select a field from suggested fields juste before 'FROM' keyword.
-<img alt="Inspector menu" src="https://raw.githubusercontent.com/tprouvot/Chrome-Salesforce-inspector/master/docs/screenshots/7_latest_comma.png" height="100">
-
-* Add "Copy Id" option when clicking on a Sobject field or Id in data export page.
-<img alt="Inspector menu" src="https://raw.githubusercontent.com/tprouvot/Chrome-Salesforce-inspector/master/docs/screenshots/8_copy_id.png" height="100">
-
-* Integrate UI updates from Garywoo's fork (https://github.com/Garywoo/Chrome-Salesforce-inspector).
+[List of changes](CHANGES.md)
 
 Features
 -----
@@ -41,6 +34,27 @@ The Inspector communicates via the official Salesforce webservice APIs on behalf
 All Salesforce API calls from the Inspector re-uses the access token/session used by the browser to access Salesforce. To acquire this access token the Salesforce Inspector requires permission to read browser cookie information for Salesforce domains.
 
 To validate the accuracy of this description, inspect the source code, monitor the network traffic in your browser or take my word.
+
+Use Salesforce Inspector with a Connected App
+-----
+If you enabled "API client whitelisting", Sf Inspector may not work anymore.
+To secure the extension usage, you can use a auth flow to get an access token linked to a connected app.
+
+1. Create a connected app.
+2. Set permissions and callback url. (chrome-extension://chromeExtensionId/data-export.html?host=mysandboxHost&)
+3. Get client Id and save it in the export page
+
+<img alt="Connected App" src="./docs/screenshots/connectedApp.png" height="300">
+<img alt="Client Id" src="./docs/screenshots/clientId.png" height="100">
+<img alt="Generate Token" src="./docs/screenshots/generateAccessToken.png" height="300">
+
+Installation
+-----
+1. Download or clone the repo locally.
+2. Open `chrome://extensions/`.
+3. Enable `Developer mode`.
+4. Click `Load unpacked extension...`.
+5. Select the `addon` subdirectory of this repository.
 
 Troubleshooting
 -----

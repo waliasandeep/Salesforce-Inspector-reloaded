@@ -99,6 +99,7 @@ class Model {
     this.exportProgress = {};
     this.relationsHidden = false;
     this.queryName = "";
+    this.clientId = localStorage.getItem(sfHost + "_clientId");
 
     this.spinFor(sfConn.soap(sfConn.wsdl(apiVersion, "Partner"), "getUserInfo", {}).then(res => {
       this.userInfo = res.userFullName + " / " + res.userName + " / " + res.organizationName;
@@ -130,6 +131,9 @@ class Model {
   }
   setQueryName(value) {
     this.queryName = value;
+  }
+  setClientId(value) {
+    this.clientId = value;
   }
   setQueryInput(queryInput) {
     this.queryInput = queryInput;
@@ -186,6 +190,9 @@ class Model {
   }
   addToHistory() {
     this.savedHistory.add({ query: this.getQueryToSave(), useToolingApi: this.queryTooling });
+  }
+  saveClientId() {
+    localStorage.setItem(this.sfHost + "_clientId", this.clientId);
   }
   removeFromHistory() {
     this.savedHistory.remove({ query: this.getQueryToSave(), useToolingApi: this.queryTooling });
@@ -910,6 +917,7 @@ class App extends React.Component {
     this.onClearHistory = this.onClearHistory.bind(this);
     this.onSelectSavedEntry = this.onSelectSavedEntry.bind(this);
     this.onAddToHistory = this.onAddToHistory.bind(this);
+    this.onSaveClientId = this.onSaveClientId.bind(this);
     this.onRemoveFromHistory = this.onRemoveFromHistory.bind(this);
     this.onClearSavedHistory = this.onClearSavedHistory.bind(this);
     this.onToggleHelp = this.onToggleHelp.bind(this);
@@ -921,6 +929,7 @@ class App extends React.Component {
     this.onCopyAsJson = this.onCopyAsJson.bind(this);
     this.onResultsFilterInput = this.onResultsFilterInput.bind(this);
     this.onSetQueryName = this.onSetQueryName.bind(this);
+    this.onSetClientId = this.onSetClientId.bind(this);
     this.onStopExport = this.onStopExport.bind(this);
     this.onHideRelationsChange = this.onHideRelationsChange.bind(this);
   }
@@ -960,6 +969,12 @@ class App extends React.Component {
     e.preventDefault();
     let { model } = this.props;
     model.addToHistory();
+    model.didUpdate();
+  }
+  onSaveClientId(e) {
+    e.preventDefault();
+    let { model } = this.props;
+    model.saveClientId();
     model.didUpdate();
   }
   onRemoveFromHistory(e) {
@@ -1028,6 +1043,11 @@ class App extends React.Component {
   onSetQueryName(e) {
     let { model } = this.props;
     model.setQueryName(e.target.value);
+    model.didUpdate();
+  }
+  onSetClientId(e) {
+    let { model } = this.props;
+    model.setClientId(e.target.value);
     model.didUpdate();
   }
   onStopExport() {
@@ -1152,13 +1172,15 @@ class App extends React.Component {
               h("input", { placeholder: "Query Label", type: "save", value: model.queryName, onInput: this.onSetQueryName }),
               h("button", { onClick: this.onAddToHistory, title: "Add query to saved history" }, "Save Query"),
               h("button", { className: model.expandSavedOptions ? "toggle contract" : "toggle expand", title: "Show More Options", onClick: this.onToggleSavedOptions }, h("div", { className: "button-toggle-icon" })),
+              h("input", { placeholder: "Client Id", type: "default", value: model.clientId, onInput: this.onSetClientId }),
+              h("button", { onClick: this.onSaveClientId, title: "Save Client Id" }, "Save"),
             ),
           ),
           h("div", { className: "query-options" },
             h("label", {},
               h("input", { type: "checkbox", checked: model.queryAll, onChange: this.onQueryAllChange, disabled: model.queryTooling }),
               " ",
-              h("span", {}, "Include deleted and archived records?")
+              h("span", {}, "Include deleted records?")
             ),
             h("label", { title: "With the tooling API you can query more metadata, but you cannot query regular data" },
               h("input", { type: "checkbox", checked: model.queryTooling, onChange: this.onQueryToolingChange, disabled: model.queryAll }),
